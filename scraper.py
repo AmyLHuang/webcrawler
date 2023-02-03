@@ -23,7 +23,12 @@ def is_valid(url):
     # There are already some conditions that return False.
     try:
         parsed = urlparse(url)
-        if parsed.scheme not in set(["http", "https"]):
+
+        domains = False
+        if (".ics.uci.edu" in parsed.hostname) or (".cs.uci.edu" in parsed.hostname) or (".informaics.uci.edu" in parsed.hostname) or (".stat.uci.edu" in parsed.hostname):
+            domains = True
+
+        if (parsed.scheme not in set(["http", "https"])) or (domains == False):
             return False
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
