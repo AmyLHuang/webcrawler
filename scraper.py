@@ -1,6 +1,7 @@
 import re
 from bs4 import BeautifulSoup
-from urllib.parse import urlparse
+from urllib.parse import urldefrag, urlparse, urljoin
+
 
 def scraper(url, resp):
     links = extract_next_links(url, resp)
@@ -16,21 +17,28 @@ def extract_next_links(url, resp):
     #         resp.raw_response.url: the url, again
     #         resp.raw_response.content: the content of the page!
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
-    soup = BeautifulSoup(resp.content, 'html.parser')
+    soup = BeautifulSoup(resp.raw_response.content, 'lxml')
     links = []
     for link in soup.find_all('a'):
         href = link.get('href')
-        if href:
-            links.append(href)
-    return links
+        if type(href) != type(None): 
+            absoluteLink = urljoin(resp.raw_response.url, href)
+            unfragAbsLink = urldefrag(absoluteLink)[0]
+            links.append(unfragAbsLink)
+    print(links)
 
 def is_valid(url):
     # Decide whether to crawl this url or not. 
     # If you decide to crawl it, return True; otherwise return False.
-    # There are already some conditions that return False.
+    # There are already some conditions that return False. 
     try:
         parsed = urlparse(url)
-        if parsed.scheme not in set(["http", "https"]):
+        if parsed.hostname == None:
+            return False
+        domains = False
+        if (".ics.uci.edu" in parsed.hostname) or (".cs.uci.edu" in parsed.hostname) or (".informatics.uci.edu" in parsed.hostname) or (".stat.uci.edu" in parsed.hostname):
+            domains = True 
+        if parsed.scheme not in set(["http", "https"]) or not domains:
             return False
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
