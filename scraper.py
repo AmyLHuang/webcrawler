@@ -64,3 +64,11 @@ def invalid_url_format(parsed):
     valid_domain = any([d in hostname for d in domains])
     if not valid_domain:
         return True
+
+    # check if url has repeated words (e.g., www.example.com/aaa/bbb/aaa/index.html)
+    paths = parsed.path.split("/")
+    store = set()
+    for p in paths:
+        if p != "" and p in store:
+            return True
+        store.add(p)
