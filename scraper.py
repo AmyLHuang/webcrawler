@@ -49,6 +49,7 @@ def is_valid(url):
 
 def invalid_url_format(parsed):
     hostname = parsed.hostname
+    query = parsed.query
 
     # check if url has a domain
     if hostname == None:
@@ -72,3 +73,12 @@ def invalid_url_format(parsed):
         if p != "" and p in store:
             return True
         store.add(p)
+
+    # check for invalid queries
+    queries = query.split("&")
+    invalid_params = ["action=download", "action=login", "action=edit"]
+    invalid_query = any([p in queries for p in invalid_params])
+    if invalid_query:
+        return True
+
+    return False
