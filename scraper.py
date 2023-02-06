@@ -21,7 +21,7 @@ def extract_next_links(url, resp):
     links = []
     for link in soup.find_all('a'):
         href = link.get('href')
-        if type(href) != type(None): 
+        if type(href) != type(None):
             absoluteLink = urljoin(resp.raw_response.url, href)
             unfragAbsLink = urldefrag(absoluteLink)[0]
             links.append(unfragAbsLink)
