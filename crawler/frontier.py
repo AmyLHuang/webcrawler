@@ -18,6 +18,7 @@ class Frontier(object):
         self.to_be_downloaded = list()
 
         self.crawled = defaultdict(set)
+        self.paths = defaultdict(int)
 
         if not os.path.exists(self.config.save_file) and not restart:
             # Save file does not exist, but request to load save.
@@ -67,6 +68,12 @@ class Frontier(object):
             return
         else:
             self.crawled[domain].add(url)
+
+        # limit the number of crawled websites with same path
+        domain_path = domain+parsed.path
+        self.paths[domain_path] += 1
+        if self.paths[domain_path] > 20:
+            return
 
         url = normalize(url)
         urlhash = get_urlhash(url)
