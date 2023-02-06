@@ -83,3 +83,25 @@ def invalid_url_format(parsed):
         return True
 
     return False
+
+    def info_value(url):
+    # first condition: large files
+    # Check if the text in the page is more 10k words
+        length = len(soup.text)
+        if length > 10000:
+            return False
+    
+    # second condition: images
+    # Check if the number of images is less than 2
+        images = soup.find_all('img')
+        if len(images) < 2:
+            return False
+      
+    # third condition: headers
+    # Check the number of headings - more headings = valuable
+        headings = soup.find_all(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
+        if len(headings) < 2:
+            return False
+
+        return True
+
