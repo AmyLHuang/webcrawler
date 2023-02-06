@@ -4,15 +4,22 @@ import shelve
 from threading import Thread, RLock
 from queue import Queue, Empty
 
+from collections import defaultdict
+from urllib.parse import urlparse
+
 from utils import get_logger, get_urlhash, normalize
 from scraper import is_valid
+
 
 class Frontier(object):
     def __init__(self, config, restart):
         self.logger = get_logger("FRONTIER")
         self.config = config
         self.to_be_downloaded = list()
-        
+
+        self.crawled = defaultdict(set)
+        self.paths = defaultdict(int)
+
         if not os.path.exists(self.config.save_file) and not restart:
             # Save file does not exist, but request to load save.
             self.logger.info(
@@ -54,13 +61,27 @@ class Frontier(object):
             return None
 
     def add_url(self, url):
+        parsed = urlparse(url)
+        # check if the url has already been crawled
+        domain = parsed.netloc
+        if url in self.crawled[domain]:
+            return
+        else:
+            self.crawled[domain].add(url)
+
+        # limit the number of crawled websites with same path
+        domain_path = domain+parsed.path
+        self.paths[domain_path] += 1
+        if self.paths[domain_path] > 20:
+            return
+
         url = normalize(url)
         urlhash = get_urlhash(url)
         if urlhash not in self.save:
             self.save[urlhash] = (url, False)
             self.save.sync()
             self.to_be_downloaded.append(url)
-    
+
     def mark_url_complete(self, url):
         urlhash = get_urlhash(url)
         if urlhash not in self.save:

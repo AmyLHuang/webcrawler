@@ -1,9 +1,11 @@
 import re
 from urllib.parse import urlparse
 
+
 def scraper(url, resp):
     links = extract_next_links(url, resp)
     return [link for link in links if is_valid(link)]
+
 
 def extract_next_links(url, resp):
     # Implementation required.
@@ -17,19 +19,19 @@ def extract_next_links(url, resp):
     # Return a list with the hyperlinks (as strings) scrapped from resp.raw_response.content
     return list()
 
+
 def is_valid(url):
-    # Decide whether to crawl this url or not. 
+    # Decide whether to crawl this url or not.
     # If you decide to crawl it, return True; otherwise return False.
     # There are already some conditions that return False.
     try:
         parsed = urlparse(url)
 
-        domains = False
-        if (".ics.uci.edu" in parsed.hostname) or (".cs.uci.edu" in parsed.hostname) or (".informaics.uci.edu" in parsed.hostname) or (".stat.uci.edu" in parsed.hostname):
-            domains = True
-
-        if (parsed.scheme not in set(["http", "https"])) or (domains == False):
+        # check if url has correct format
+        if invalid_url_format(parsed):
             return False
+
+        # check for invalid extensions
         return not re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
             + r"|png|tiff?|mid|mp2|mp3|mp4"
@@ -38,8 +40,46 @@ def is_valid(url):
             + r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
             + r"|epub|dll|cnf|tgz|sha1"
             + r"|thmx|mso|arff|rtf|jar|csv"
+            + r"|img|mpg|war|apk|ppsx|txt|DS_Store|db|odc|Z"
             + r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", parsed.path.lower())
 
     except TypeError:
-        print ("TypeError for ", parsed)
+        print("TypeError for ", parsed)
         raise
+
+
+def invalid_url_format(parsed):
+    hostname = parsed.hostname
+    query = parsed.query
+
+    # check if url has a domain
+    if hostname == None:
+        return True
+
+    # check if url has valid scheme
+    if parsed.scheme not in set(["http", "https"]):
+        return True
+
+    # check if url has a valid domain
+    domains = [".ics.uci.edu", ".cs.uci.edu",
+               ".informatics.uci.edu", ".stat.uci.edu"]
+    valid_domain = any([d in hostname for d in domains])
+    if not valid_domain:
+        return True
+
+    # check if url has repeated words (e.g., www.example.com/aaa/bbb/aaa/index.html)
+    paths = parsed.path.split("/")
+    store = set()
+    for p in paths:
+        if p != "" and p in store:
+            return True
+        store.add(p)
+
+    # check for invalid queries
+    queries = query.split("&")
+    invalid_params = ["action=download", "action=login", "action=edit"]
+    invalid_query = any([p in queries for p in invalid_params])
+    if invalid_query:
+        return True
+
+    return False
