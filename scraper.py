@@ -84,7 +84,7 @@ def invalid_url_format(parsed):
 
     return False
 
-    def info_value(url):
+def info_value(soup):
     # first condition: large files
     # Check if the text in the page is more 10k words
         length = len(soup.text)
